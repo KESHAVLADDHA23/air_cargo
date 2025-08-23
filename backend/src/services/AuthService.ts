@@ -22,9 +22,9 @@ export class AuthService {
     };
 
     return jwt.sign(payload, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN,
+      expiresIn: JWT_EXPIRES_IN as string,
       issuer: 'air-cargo-api'
-    });
+    } as jwt.SignOptions);
   }
 
   static verifyToken(token: string): JWTPayload {

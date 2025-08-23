@@ -3,7 +3,7 @@ import { AuthService } from '../services/AuthService';
 
 export class AuthController {
   
-  static async login(req: Request, res: Response): Promise<void> {
+  static async login(req: Request, res: Response): Promise<void | Response> {
     try {
       const { email, password } = req.body;
 
@@ -40,7 +40,7 @@ export class AuthController {
     }
   }
 
-  static async getProfile(req: Request, res: Response): Promise<void> {
+  static async getProfile(req: Request, res: Response): Promise<void | Response> {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -87,7 +87,7 @@ export class AuthController {
     }
   }
 
-  static async validateToken(req: Request, res: Response): Promise<void> {
+  static async validateToken(req: Request, res: Response): Promise<void | Response> {
     try {
       const authHeader = req.headers.authorization;
       const token = authHeader && authHeader.split(' ')[1];

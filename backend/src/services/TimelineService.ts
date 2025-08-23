@@ -1,5 +1,5 @@
 import database from '../database/connection';
-import { TimelineEvent, TimelineEventType, BookingHistoryResponse, Booking } from '../types';
+import { TimelineEvent, TimelineEventType, BookingHistoryResponse, Booking, Flight, Airline } from '../types';
 import { RouteService } from './RouteService';
 
 export class TimelineService {
@@ -25,8 +25,8 @@ export class TimelineService {
       ) as TimelineEvent[];
 
       // Get flight details if available
-      let flightDetails = [];
-      let airlineDetails = [];
+      let flightDetails: Flight[] = [];
+      let airlineDetails: Airline[] = [];
       
       if (booking.flight_ids) {
         try {

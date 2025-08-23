@@ -4,7 +4,7 @@ import { RouteRequest } from '../types';
 
 export class RoutesController {
   
-  static async searchRoutes(req: Request, res: Response): Promise<void> {
+  static async searchRoutes(req: Request, res: Response): Promise<void | Response> {
     try {
       const { origin, destination, departure_date } = req.query as any;
 
@@ -91,7 +91,7 @@ export class RoutesController {
     }
   }
 
-  static async validateFlightSequence(req: Request, res: Response): Promise<void> {
+  static async validateFlightSequence(req: Request, res: Response): Promise<void | Response> {
     try {
       const { flight_ids } = req.body;
 
