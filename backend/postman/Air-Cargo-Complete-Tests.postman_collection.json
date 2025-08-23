@@ -1,0 +1,333 @@
+{
+	"info": {
+		"_postman_id": "air-cargo-api-collection",
+		"name": "Air Cargo API - Complete Test Suite",
+		"description": "Automated testing for Air Cargo Booking & Tracking API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"exec": [
+					"// Use fixed test date from environment for consistency",
+					"// testDepartureDate is already set in environment to 2024-12-25",
+					"console.log('Using test date:', pm.environment.get('testDepartureDate'));"
+				],
+				"type": "text/javascript"
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "1️⃣ Authentication Flow",
+			"item": [
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Login Success', () => {",
+									"    const data = pm.response.json().data;",
+									"    pm.expect(data.token).to.exist;",
+									"    pm.environment.set('authToken', data.token);",
+									"    pm.environment.set('userId', data.user.id);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\":\"{{testEmail}}\",\"password\":\"{{testPassword}}\"}"
+						},
+						"url": "{{baseUrl}}{{apiPrefix}}/auth/login"
+					}
+				},
+				{
+					"name": "Get Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Profile Data', () => {",
+									"    const user = pm.response.json().data.user;",
+									"    pm.expect(user.email).to.eql(pm.environment.get('testEmail'));",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{authToken}}"}],
+						"url": "{{baseUrl}}{{apiPrefix}}/auth/profile"
+					}
+				}
+			]
+		},
+		{
+			"name": "2️⃣ Route Search",
+			"item": [
+				{
+					"name": "Search Routes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Routes Found', () => {",
+									"    const data = pm.response.json().data;",
+									"    pm.expect(data.results).to.exist;",
+									"    if (data.results.direct_flights.flights.length > 0) {",
+									"        pm.environment.set('selectedFlightId', data.results.direct_flights.flights[0].id);",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}{{apiPrefix}}/routes?origin={{testOrigin}}&destination={{testDestination}}&departure_date={{testDepartureDate}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["{{apiPrefix}}", "routes"],
+							"query": [
+								{"key": "origin", "value": "{{testOrigin}}"},
+								{"key": "destination", "value": "{{testDestination}}"},
+								{"key": "departure_date", "value": "{{testDepartureDate}}"}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3️⃣ Booking Workflow",
+			"item": [
+				{
+					"name": "Create Booking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('Booking Created', () => {",
+									"    const booking = pm.response.json().data.booking;",
+									"    pm.expect(booking.ref_id).to.match(/^AC-\\d{8}-\\d{4}$/);",
+									"    pm.expect(booking.status).to.eql('BOOKED');",
+									"    pm.environment.set('bookingRefId', booking.ref_id);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{authToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"origin\":\"{{testOrigin}}\",\"destination\":\"{{testDestination}}\",\"pieces\":{{testPieces}},\"weight_kg\":{{testWeight}},\"flight_ids\":[{{selectedFlightId}}]}"
+						},
+						"url": "{{baseUrl}}{{apiPrefix}}/bookings"
+					}
+				},
+				{
+					"name": "Get Booking History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('History Data', () => {",
+									"    const data = pm.response.json().data;",
+									"    pm.expect(data.booking.ref_id).to.eql(pm.environment.get('bookingRefId'));",
+									"    pm.expect(data.timeline.length).to.be.greaterThan(0);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"url": "{{baseUrl}}{{apiPrefix}}/bookings/{{bookingRefId}}/history"
+					}
+				},
+				{
+					"name": "Mark as Departed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Status Updated', () => {",
+									"    const booking = pm.response.json().data.booking;",
+									"    pm.expect(booking.status).to.eql('DEPARTED');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{authToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"location\":\"{{testLocation}}\",\"flight_info\":{\"flight_number\":\"AI101\"}}"
+						},
+						"url": "{{baseUrl}}{{apiPrefix}}/bookings/{{bookingRefId}}/depart"
+					}
+				},
+				{
+					"name": "Mark as Arrived",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Status Updated', () => {",
+									"    const booking = pm.response.json().data.booking;",
+									"    pm.expect(booking.status).to.eql('ARRIVED');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{authToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"location\":\"{{testArrivalLocation}}\",\"flight_info\":{\"flight_number\":\"AI101\"}}"
+						},
+						"url": "{{baseUrl}}{{apiPrefix}}/bookings/{{bookingRefId}}/arrive"
+					}
+				},
+				{
+					"name": "Try Cancel (Should Fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400', () => pm.response.to.have.status(400));",
+									"pm.test('Cancel Failed', () => {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.message).to.include('cannot be cancelled');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [{"key": "Authorization", "value": "Bearer {{authToken}}"}],
+						"url": "{{baseUrl}}{{apiPrefix}}/bookings/{{bookingRefId}}/cancel"
+					}
+				}
+			]
+		},
+		{
+			"name": "4️⃣ Additional Tests",
+			"item": [
+				{
+					"name": "Create Second Booking for Cancel Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('Second Booking Created', () => {",
+									"    const booking = pm.response.json().data.booking;",
+									"    pm.environment.set('cancelTestBookingRefId', booking.ref_id);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{authToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"origin\":\"BOM\",\"destination\":\"CCU\",\"pieces\":3,\"weight_kg\":75,\"flight_ids\":[{{selectedFlightId}}]}"
+						},
+						"url": "{{baseUrl}}{{apiPrefix}}/bookings"
+					}
+				},
+				{
+					"name": "Cancel Second Booking (Should Work)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Booking Cancelled', () => {",
+									"    const booking = pm.response.json().data.booking;",
+									"    pm.expect(booking.status).to.eql('CANCELLED');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [{"key": "Authorization", "value": "Bearer {{authToken}}"}],
+						"url": "{{baseUrl}}{{apiPrefix}}/bookings/{{cancelTestBookingRefId}}/cancel"
+					}
+				},
+				{
+					"name": "Get User Bookings",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('User Bookings', () => {",
+									"    const data = pm.response.json().data;",
+									"    pm.expect(data.bookings).to.be.an('array');",
+									"    pm.expect(data.count).to.be.greaterThan(0);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{authToken}}"}],
+						"url": "{{baseUrl}}{{apiPrefix}}/bookings/my-bookings"
+					}
+				}
+			]
+		}
+	]
+}
