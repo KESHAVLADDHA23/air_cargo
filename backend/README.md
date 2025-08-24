@@ -286,6 +286,6 @@ MIT License - see LICENSE file for details
 
 ---
 
-**Built with ❤️ by Kesha**
+**Built with ❤️ by Keshav**
 
 For questions or support, please refer to the API documentation at `/api/v1/docs` when the server is running.

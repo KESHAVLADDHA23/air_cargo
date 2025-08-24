@@ -36,6 +36,7 @@ export class TimelineService {
           // Get unique airline details
           const airlineIds = [...new Set(flightDetails.map(f => f.airline_id))];
           if (airlineIds.length > 0) {
+            //id ->? convert
             const placeholders = airlineIds.map(() => '?').join(',');
             airlineDetails = await database.all(
               `SELECT * FROM airlines WHERE id IN (${placeholders})`,
