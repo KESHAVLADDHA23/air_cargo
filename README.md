@@ -269,20 +269,12 @@ CORS_ORIGIN=https://yourdomain.com
 
 ## 📝 License
 
-This project is developed for educational purposes as part of a computer science curriculum.
+This project comes under MIT License.
 
 ## 👨‍💻 Developer
 
-**Kesha** - Computer Science Student
+**Keshav** - Computer Science Student
 
----
-
-## 🔗 Quick Links
-
-- **Live Demo**: [Add your deployment URL]
-- **API Documentation**: [Add API docs URL]
-- **Design Documents**: `design/` folder
-- **Issue Tracker**: [GitHub Issues]
 
 ## 📞 Support
 
