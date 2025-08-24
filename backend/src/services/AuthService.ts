@@ -97,4 +97,50 @@ export class AuthService {
       return null;
     }
   }
+
+  static async registerUser(userData: {
+    username: string;
+    email: string;
+    password: string;
+  }): Promise<{ user: User; token: string } | { error: string }> {
+    try {
+      const { username, email, password } = userData;
+
+      // Check if user already exists by email
+      const existingUserByEmail = await UserModel.findByEmail(email);
+      if (existingUserByEmail) {
+        return { error: 'User with this email already exists' };
+      }
+
+      // Check if user already exists by username
+      const existingUserByUsername = await UserModel.findByUsername(username);
+      if (existingUserByUsername) {
+        return { error: 'Username is already taken' };
+      }
+
+      // Hash the password
+      const password_hash = await this.hashPassword(password);
+
+      // Create the user
+      const user = await UserModel.create({
+        username,
+        email,
+        password_hash
+      });
+
+      // Generate token
+      const token = this.generateToken(user);
+
+      // Remove password hash from response
+      const { password_hash: _, ...userWithoutPassword } = user;
+
+      return {
+        user: userWithoutPassword as User,
+        token
+      };
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { error: 'Something went wrong during registration' };
+    }
+  }
 }

@@ -3,6 +3,43 @@ import { AuthService } from '../services/AuthService';
 
 export class AuthController {
   
+  static async signup(req: Request, res: Response): Promise<void | Response> {
+    try {
+      const { username, email, password } = req.body;
+
+      const result = await AuthService.registerUser({ username, email, password });
+      
+      if ('error' in result) {
+        return res.status(400).json({
+          error: 'Registration failed',
+          message: result.error
+        });
+      }
+
+      const { user, token } = result;
+
+      res.status(201).json({
+        message: 'Account created successfully',
+        data: {
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email
+          },
+          token,
+          expires_in: '24h'
+        }
+      });
+
+    } catch (error) {
+      console.error('Signup error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Something went wrong during registration'
+      });
+    }
+  }
+
   static async login(req: Request, res: Response): Promise<void | Response> {
     try {
       const { email, password } = req.body;

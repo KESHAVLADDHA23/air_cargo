@@ -5,6 +5,9 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
+// Signup endpoint
+router.post('/signup', validateRequest(schemas.signup), AuthController.signup);
+
 // Login endpoint
 router.post('/login', validateRequest(schemas.login), AuthController.login);
 

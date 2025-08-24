@@ -82,6 +82,7 @@ app.get(`${API_PREFIX}/docs`, (req, res) => {
     description: 'RESTful API for air cargo booking and tracking system',
     endpoints: {
       auth: {
+        'POST /auth/signup': 'User registration',
         'POST /auth/login': 'User login',
         'GET /auth/profile': 'Get user profile (protected)',
         'GET /auth/validate': 'Validate token'
